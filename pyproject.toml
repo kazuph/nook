@@ -1,3 +1,38 @@
+[project]
+name = "nook"
+version = "0.1.0"
+description = "Nook"
+requires-python = ">=3.10"
+dependencies = [
+    "arxiv>=2.1.0",
+    "beautifulsoup4==4.12.3",
+    "constructs>=10.0.0,<11.0.0",
+    "fastapi>=0.115.11",
+    "feedparser==6.0.10",
+    "google-genai==1.2.0",
+    "httpx==0.27.2",
+    "jinja2>=3.1.5",
+    "markdown>=3.7",
+    "praw==7.7.1",
+    "python-dotenv==1.0.0",
+    "regex==2023.12.25",
+    "requests==2.31.0",
+    "tenacity==9.0.0",
+    "tqdm>=4.67.1",
+    "uvicorn>=0.34.0",
+]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["nook"]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff==0.9.6",
+]
 [tool.ruff]
 line-length = 88
 indent-width = 4

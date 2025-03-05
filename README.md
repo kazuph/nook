@@ -38,28 +38,26 @@
 
 3. **依存関係のインストール**
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Windowsの場合: .venv\Scripts\activate
-   pip install -r requirements.txt
-   pip install -r requirements-dev.txt
+   uv venv
+   uv sync
    ```
 
 4. **データ収集実行**
    ```bash
-   python main.py
+   uv run python main.py
    ```
    .envのOUTPUT_DIR以下に収集した情報がmdファイルで保存されます。
 
 5. **ビューワのサーバ起動**
    ```bash
-   python nook/functions/viewer/viewer.py
+   uv run python nook/functions/viewer/viewer.py
    ```
    サーバ起動した状態でブラウザからhttp://localhost:8080 にアクセスすると閲覧できます。
 
 6. **データ収集をcronで定期実行**
-   
+
    run_nook.sh内のPROJECT_DIRを自分の環境に合わせて編集する
-   
+
    run_nook.shに実行権限を付与
    ```bash
    chmod +x run_nook.sh
@@ -74,9 +72,9 @@
    ```
 
 8. **ビューワのサーバを永続化**
-   
+
    run_viewer.sh内のPROJECT_DIRを自分の環境に合わせて編集する
-   
+
    run_viewer.shに実行権限を付与
    ```bash
    chmod +x run_viewer.sh
@@ -111,7 +109,7 @@
    sudo systemctl status nook-viewer.service
    ```
    Active: active (running) が表示されれば成功。
-   
+
    ブラウザでhttp://localhost:8080 にアクセスし、表示を確認。
 
 ↓以下、オリジナルのREADMEです。
