@@ -1,0 +1,55 @@
+# バージョン管理システム
+.git
+.gitignore
+
+# Python関連
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+*.egg-info/
+
+# Node.js関連
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# エディタ関連
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# AWS CDK関連
+.cdk.staging/
+cdk.out/
+
+# 環境変数
+.env
+.env.*
+!.env.example
+
+# Docker関連
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# その他
+*.log
+.coverage
+coverage/
+dist/
+build/
+tmp/
+
+# 特定のファイル（READMEは除外しない）
+!README.md
