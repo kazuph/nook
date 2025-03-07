@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  # ビューワーサービス（常時稼働）
+  viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${OUTPUT_DIR}:/app/output
+    ports:
+      - "8080:8080"
+    command: uv run python nook/functions/viewer/viewer.py
+    restart: always
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OUTPUT_DIR=/app/output
+      - TZ=Asia/Tokyo
+    labels:
+      org.label-schema.name: "nook-viewer"
+
+  # データ収集サービス（Ofeliaから実行される）
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${OUTPUT_DIR}:/app/output
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT}
+      - OUTPUT_DIR=/app/output
+      - TZ=Asia/Tokyo
+    command: uv run python main.py
+    restart: "no"
+    labels:
+      org.label-schema.name: "nook-collector"
+      ofelia.enabled: "true"
+      # 日本時間の朝7時に実行
+      ofelia.job-exec.datajob.schedule: "0 7 * * *"
+      ofelia.job-exec.datajob.command: "uv run python main.py"
+
+  # Ofeliaスケジューラー
+  ofelia:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - collector
+      - viewer
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - TZ=Asia/Tokyo
+    restart: always
+    labels:
+      org.label-schema.name: "nook-scheduler"

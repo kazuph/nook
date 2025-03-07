@@ -19,4 +19,5 @@ uv.lock
 
 *.txt
 *.md
+!README.md
 *.json

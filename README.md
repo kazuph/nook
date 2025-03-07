@@ -54,63 +54,122 @@
    ```
    サーバ起動した状態でブラウザからhttp://localhost:8080 にアクセスすると閲覧できます。
 
-6. **データ収集をcronで定期実行**
+6. **Docker Composeでサービスを実行**
 
-   run_nook.sh内のPROJECT_DIRを自分の環境に合わせて編集する
-
-   run_nook.shに実行権限を付与
+   Docker Composeを使用して、データ収集とビューワーサービスを自動化します。
+   以下のファイルは作成済みなので、実際にはコマンドのみ実行してください。
+   
+   まず、Dockerfileを作成します：
    ```bash
-   chmod +x run_nook.sh
+   cat > Dockerfile << 'EOF'
+   FROM python:3.11-slim
+
+   WORKDIR /app
+
+   # uvをインストール
+   RUN pip install --no-cache-dir uv
+
+   # 依存関係ファイルをコピー
+   COPY pyproject.toml .
+
+   # アプリケーションコードをコピー
+   COPY . .
+
+   # uvを使用して依存関係をインストール
+   RUN uv venv .venv
+   RUN uv sync
+
+   # 環境変数の設定
+   ENV PATH="/app/.venv/bin:$PATH"
+
+   # デフォルトコマンド（必要に応じてオーバーライド）
+   CMD ["uv", "run", "python", "main.py"]
+   EOF
    ```
-   crontabを編集
+
+   次に、docker-compose.ymlを作成します：
    ```bash
-   crontab -e
+   cat > docker-compose.yml << 'EOF'
+   version: '3'
+
+   services:
+     # ビューワーサービス（常時稼働）
+     viewer:
+       build:
+         context: .
+         dockerfile: Dockerfile
+       volumes:
+         - ${OUTPUT_DIR}:/app/output
+       ports:
+         - "8080:8080"
+       command: uv run python nook/functions/viewer/viewer.py
+       restart: always
+       environment:
+         - GEMINI_API_KEY=${GEMINI_API_KEY}
+         - OUTPUT_DIR=/app/output
+         - TZ=Asia/Tokyo
+       labels:
+         org.label-schema.name: "nook-viewer"
+
+     # データ収集サービス（Ofeliaから実行される）
+     collector:
+       build:
+         context: .
+         dockerfile: Dockerfile
+       volumes:
+         - ${OUTPUT_DIR}:/app/output
+       environment:
+         - GEMINI_API_KEY=${GEMINI_API_KEY}
+         - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID}
+         - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET}
+         - REDDIT_USER_AGENT=${REDDIT_USER_AGENT}
+         - OUTPUT_DIR=/app/output
+         - TZ=Asia/Tokyo
+       command: uv run python main.py
+       restart: "no"
+       labels:
+         org.label-schema.name: "nook-collector"
+         ofelia.enabled: "true"
+         # 日本時間の朝7時に実行
+         ofelia.job-exec.datajob.schedule: "0 7 * * *"
+         ofelia.job-exec.datajob.command: "uv run python main.py"
+
+     # Ofeliaスケジューラー
+     ofelia:
+       image: mcuadros/ofelia:latest
+       depends_on:
+         - collector
+         - viewer
+       command: daemon --docker
+       volumes:
+         - /var/run/docker.sock:/var/run/docker.sock:ro
+       environment:
+         - TZ=Asia/Tokyo
+       restart: always
+       labels:
+         org.label-schema.name: "nook-scheduler"
+   EOF
    ```
-   スケジュールを追加(以下の場合、毎日夜0時にデータ収集実行）
-   ```text
-   0 0 * * * /home/yourname/nook/run_nook.sh
-   ```
 
-8. **ビューワのサーバを永続化**
-
-   run_viewer.sh内のPROJECT_DIRを自分の環境に合わせて編集する
-
-   run_viewer.shに実行権限を付与
+   Docker Composeを起動します：
    ```bash
-   chmod +x run_viewer.sh
+   docker-compose up -d
    ```
-   サービスファイルを作成
-   ```bash
-   sudo nano /etc/systemd/system/nook-viewer.service
-   ```
-   ```ini
-   [Unit]
-   Description=Nook Viewer Service
-   After=network.target
 
-   [Service]
-   ExecStart=/home/yourname/nook/run_viewer.sh
-   WorkingDirectory=/home/yourname/nook/nook/functions/viewer
-   Restart=always
-   User=yourname
-   Environment="PATH=/home/uourname/nook/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+   これで以下の機能が自動的に実行されます：
+   - ビューワーサービスが常時稼働（http://localhost:8080 でアクセス可能）
+   - データ収集が毎日朝7時に自動実行
+   - コンテナの再起動も自動的に行われる
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
-   サービスを有効化して起動
+   コンテナの状態を確認するには：
    ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable nook-viewer.service
-   sudo systemctl start nook-viewer.service
+   docker-compose ps
    ```
-   サービスの状態を確認
-   ```bash
-   sudo systemctl status nook-viewer.service
-   ```
-   Active: active (running) が表示されれば成功。
 
-   ブラウザでhttp://localhost:8080 にアクセスし、表示を確認。
+   ログを確認するには：
+   ```bash
+   docker-compose logs -f
+   ```
 
 ↓以下、オリジナルのREADMEです。
 
