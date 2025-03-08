@@ -39,8 +39,8 @@ services:
       org.label-schema.name: "nook-collector"
       ofelia.enabled: "true"
       # 日本時間の朝7時に実行
-      ofelia.job-exec.datajob.schedule: "0 7 * * *"
-      ofelia.job-exec.datajob.command: "uv run python main.py"
+      ofelia.job-run.datajob.schedule: "0 7 * * *"
+      ofelia.job-run.datajob.service: "collector"
 
   # Ofeliaスケジューラー
   ofelia:
