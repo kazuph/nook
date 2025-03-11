@@ -37,10 +37,6 @@ services:
     restart: "no"
     labels:
       org.label-schema.name: "nook-collector"
-      ofelia.enabled: "true"
-      # 日本時間の朝7時に実行
-      ofelia.job-run.datajob.schedule: "0 7 * * *"
-      ofelia.job-run.datajob.service: "collector"
 
   # Ofeliaスケジューラー
   ofelia:
@@ -56,3 +52,6 @@ services:
     restart: always
     labels:
       org.label-schema.name: "nook-scheduler"
+      # 日本時間の朝7時にcollectorを実行
+      ofelia.job-run.datajob.schedule: "0 7 * * *"
+      ofelia.job-run.datajob.container: "nook-collector"
