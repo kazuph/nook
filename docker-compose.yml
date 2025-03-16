@@ -24,6 +24,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: nook-collector
     volumes:
       - ${OUTPUT_DIR}:/app/output
     environment:
